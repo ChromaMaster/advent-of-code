@@ -6,7 +6,7 @@ pub fn execute() {
     let c: Vec<&str> = contents.lines().collect();
     let commands = parse_string_commands(c.iter().map(|&s| s.to_string()).collect());
 
-    println!("--- Part One ---");
+    println!("--- Part Two ---");
     let mut submarine = Submarine { ..Default::default() };
     submarine.drive(commands);
     println!("There final position of the submarine is {} ", submarine.get_overall_position());
@@ -42,7 +42,7 @@ enum Command {
     Up(u32),
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, PartialEq)]
 struct Position {
     horizontal: u32,
     depth: u32,
@@ -51,6 +51,7 @@ struct Position {
 #[derive(Default)]
 struct Submarine {
     position: Position,
+    aim: u32,
 }
 
 impl Submarine {
@@ -63,13 +64,14 @@ impl Submarine {
     fn parse_command(&mut self, command: &Command) {
         match command {
             Command::Forward(val) => {
-                self.position.horizontal += val
+                self.position.horizontal += val;
+                self.position.depth  += self.aim * val;
             }
             Command::Down(val) => {
-                self.position.depth += val
+                self.aim += val
             }
             Command::Up(val) => {
-                self.position.depth -= val
+                self.aim -= val
             }
         }
     }
@@ -94,42 +96,42 @@ mod tests {
     }
 
     #[test]
-    fn it_detects_the_forward_command_and_increases_the_horizontal_position() {
+    fn it_detects_the_forward_command_and_updates_the_position() {
         let mut submarine = Submarine { ..Default::default() };
         let command = Command::Forward(3);
 
         submarine.parse_command(&command);
-        assert_eq!(submarine.position.horizontal, 3)
+        assert_eq!(submarine.position, Position{horizontal:3, depth: 0});
     }
 
     #[test]
-    fn it_detects_the_down_command_and_increases_the_depth_position() {
+    fn it_detects_the_down_command_and_increases_the_aim() {
         let mut submarine = Submarine { ..Default::default() };
         let command = Command::Down(2);
 
         submarine.parse_command(&command);
-        assert_eq!(submarine.position.depth, 2)
+        assert_eq!(submarine.aim, 2)
     }
 
     #[test]
-    fn it_detects_the_up_command_and_decreases_the_depth_position() {
-        let mut submarine = Submarine { position: Position { depth: 5, ..Default::default() } };
+    fn it_detects_the_up_command_and_decreases_the_aim() {
+        let mut submarine = Submarine { position: Position { depth: 0, ..Default::default() }, aim: 5 };
         let command = Command::Up(2);
 
         submarine.parse_command(&command);
-        assert_eq!(submarine.position.depth, 3)
+        assert_eq!(submarine.aim, 3)
     }
 
     #[test]
     fn it_returns_the_overall_position() {
-        let submarine = Submarine { position: Position { horizontal: 15, depth: 10 } };
+        let submarine = Submarine { position: Position { horizontal: 15, depth: 10 }, ..Default::default() };
         assert_eq!(submarine.get_overall_position(), 150)
     }
 
     #[test]
     fn it_drives_the_submarine_correctly() {
-        let mut submarine = Submarine { position: Position { horizontal: 0, depth: 0 } };
+        let mut submarine = Submarine { position: Position { horizontal: 0, depth: 0 }, ..Default::default() };
         submarine.drive(vec![Command::Forward(5), Command::Down(5), Command::Forward(8), Command::Up(3), Command::Down(8), Command::Forward(2)]);
-        assert_eq!(submarine.get_overall_position(), 150)
+        assert_eq!(submarine.get_overall_position(), 900)
     }
 }
