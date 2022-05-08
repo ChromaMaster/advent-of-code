@@ -1,5 +1,6 @@
 use std::fs;
 
+#[allow(dead_code)]
 pub fn execute() {
     let contents = fs::read_to_string("../inputs/e2_dive_input.txt").expect("Cannot read the file");
 
