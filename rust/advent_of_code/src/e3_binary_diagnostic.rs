@@ -1,5 +1,6 @@
 use std::fs;
 
+#[allow(dead_code)]
 pub fn execute() {
     let contents = fs::read_to_string("../inputs/e3_binary_diagnostic_input.txt").expect("Cannot read the file");
 
