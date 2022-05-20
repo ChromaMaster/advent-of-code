@@ -6,21 +6,26 @@ pub fn execute() {
     let numbers = get_bingo_numbers(contents.clone());
     let mut boards = get_bingo_boards(contents);
 
-    println!("--- Part One ---");
+    println!("--- Part Two ---");
     'outer: for number in numbers {
-        for (index, board) in boards.iter_mut().enumerate() {
+        for board in boards.iter_mut() {
             board.mark_number(number);
-            if board.is_winner() {
-                let sum: u32 = board.get_not_marked_numbers().iter().map(|n| n.value).sum();
+        }
 
-                println!("Winner is board {}!", index);
-                println!("Result is: {}", sum * number.value);
-                break 'outer;
-            }
+        // If there are more than one board playing, get rid of all the winner boards
+        if boards.len() != 1 {
+            boards.retain(|b| !b.is_winner());
+            continue
+        }
+
+        // At this point only one board is playing. Wait until it wins
+        if boards.get(0).unwrap().is_winner() {
+            let sum: u32 = boards.get(0).unwrap().get_not_marked_numbers().iter().map(|n| n.value).sum();
+            println!("Last winner board!");
+            println!("Result is: {}", sum * number.value);
+            break 'outer;
         }
     }
-
-
 }
 
 #[derive(Debug, Clone, Copy)]
