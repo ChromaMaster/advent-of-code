@@ -1,3 +1,4 @@
 # Advent of code
 
-- [2021](https://adventofcode.com/2021)
+- [2021](2021/)
+- [2022](2022/)
