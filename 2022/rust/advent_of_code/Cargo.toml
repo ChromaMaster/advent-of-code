@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "src/day1",
+    "src/day2"
 ]
+default-members = ["src/day2"]
 
 [workspace.package]
 version = "0.1.0"
