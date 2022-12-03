@@ -28,7 +28,8 @@ fn main() {
     let input = fs::read_to_string("src/day3/input/input.txt")
         .expect("Cannot open input file");
 
-    let rucksacks = input.trim().split('\n').map(|line| Rucksack::new(line.to_owned())).collect::<Vec<Rucksack>>();
+    let lines = input.trim().split('\n').map(|line| line.to_string()).collect::<Vec<String>>();
+    let rucksacks = lines.iter().map(|line| Rucksack::new(line.to_string())).collect::<Vec<Rucksack>>();
 
     let mut rucksacks_priorities: Vec<u32> = Vec::new();
     for rucksack in rucksacks {
@@ -36,7 +37,25 @@ fn main() {
         rucksacks_priorities.push(shared_items.iter().fold(0, |acc, &item| acc + get_item_priority(item)));
     }
 
-    println!("Part one: Total priority sum is {}", rucksacks_priorities.iter().sum::<u32>())
+    println!("Part one: Total priority sum is {}", rucksacks_priorities.iter().sum::<u32>());
+
+    // Part two
+    let elf_groups = lines.chunks(3).map(Vec::from).collect::<Vec<_>>();
+    let mut rucksacks_priorities: Vec<u32> = Vec::new();
+    for elf_group in elf_groups {
+        // FIXME: Duplicated code...
+        let shared_items = elf_group[0]
+            .chars()
+            .filter(|&chr| elf_group[1].contains(chr) && elf_group[2].contains(chr))
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<char>>();
+
+        rucksacks_priorities.push(shared_items.iter().fold(0, |acc, &item| acc + get_item_priority(item)));
+    }
+
+    println!("Part two: Total priority sum is {}", rucksacks_priorities.iter().sum::<u32>());
+
 }
 
 pub fn get_item_priority(item: char) -> u32 {
