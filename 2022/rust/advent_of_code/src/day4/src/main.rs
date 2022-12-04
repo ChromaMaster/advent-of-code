@@ -10,7 +10,8 @@ fn main() {
         .map(|line| line.to_string())
         .collect::<Vec<String>>();
 
-    let mut c = 0u32;
+    let mut complety_overlaps = 0u32;
+    let mut overlaps = 0u32;
     for line in lines {
         let mut elf_sectors = line.split(',')
             .map(|elf_sectors| get_elf_sector(elf_sectors.to_string()))
@@ -22,11 +23,16 @@ fn main() {
 
         // Check if the shorter list of sectors is contained in the larger one
         if elf_sectors[0].iter().all(|sec| elf_sectors[1].contains(sec)) {
-            c += 1;
+            complety_overlaps += 1;
+        }
+
+        if elf_sectors[0].iter().any(|sec| elf_sectors[1].contains(sec)) {
+            overlaps += 1;
         }
     }
 
-    println!("Part one: There are {} assignments that fully contains the other", c);
+    println!("Part one: There are {} assignments that fully contains the other", complety_overlaps);
+    println!("Part two: There are {} assignments that overlap", overlaps);
 }
 
 fn get_elf_sector(sec: String) -> Vec<u32> {
