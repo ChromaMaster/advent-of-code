@@ -20,13 +20,13 @@ impl Forest {
         let mut visible = false;
 
         // Look left
-        visible |= self.trees[pos.0][0..pos.1].iter().all(|&a| a < self.tree_hight(pos));
+        visible |= self.get_trees_from_left(pos).iter().all(|&&a| a < self.tree_hight(pos));
         // Look right
-        visible |= self.trees[pos.0][pos.1 + 1..self.trees[pos.0].len()].iter().all(|&a| a < self.tree_hight(pos));
+        visible |= self.get_trees_from_right(pos).iter().all(|&&a| a < self.tree_hight(pos));
         // Look up
-        visible |= self.trees[0..pos.0].iter().map(|e| e[pos.1]).all(|a| a < self.tree_hight(pos));
+        visible |= self.get_trees_from_above(pos).iter().all(|&&a| a < self.tree_hight(pos));
         // Look down
-        visible |= self.trees[pos.0 + 1..self.trees.len()].iter().map(|e| e[pos.1]).all(|a| a < self.tree_hight(pos));
+        visible |= self.get_trees_from_below(pos).iter().all(|&&a| a < self.tree_hight(pos));
 
         visible
     }
@@ -42,7 +42,82 @@ impl Forest {
         }
         visible_trees
     }
+
+    pub fn get_visibility_from_tree(&self, pos: (usize, usize)) -> u32 {
+        let mut visibility = 1u32;
+        let mut count = 0u32;
+
+        // Left
+        let mut trees = self.get_trees_from_left(pos);
+        trees.reverse();
+        for &tree in trees {
+            count += 1;
+            if tree >= self.tree_hight(pos) { break; }
+        }
+        visibility *= count;
+        count = 0;
+
+        // Right
+        trees = self.get_trees_from_right(pos);
+        for &tree in trees {
+            count += 1;
+            if tree >= self.tree_hight(pos) { break; }
+        }
+        visibility *= count;
+        count = 0;
+
+        // Up
+        trees = self.get_trees_from_above(pos);
+        trees.reverse();
+        for &tree in trees {
+            count += 1;
+            if tree >= self.tree_hight(pos) { break; }
+        }
+        visibility *= count;
+        count = 0;
+
+        // Down
+        trees = self.get_trees_from_below(pos);
+        // trees.reverse();
+        for &tree in trees {
+            count += 1;
+            if tree >= self.tree_hight(pos) { break; }
+        }
+        visibility *= count;
+
+        visibility
+    }
+
+    pub fn get_best_position_to_place_the_camp(&self) -> u32 {
+        let mut max_visibility = 0u32;
+        for i in 0..self.trees.len() {
+            for j in 0..self.trees[0].len() {
+                let visibility = self.get_visibility_from_tree((i, j));
+                if visibility > max_visibility {
+                    max_visibility = visibility
+                }
+            }
+        }
+        max_visibility
+    }
+
+    fn get_trees_from_left(&self, pos: (usize, usize)) -> Vec<&u32> {
+        self.trees[pos.0][0..pos.1].iter().collect::<Vec<&u32>>()
+    }
+
+    fn get_trees_from_right(&self, pos: (usize, usize)) -> Vec<&u32> {
+        self.trees[pos.0][pos.1 + 1..self.trees[pos.0].len()].iter().collect::<Vec<&u32>>()
+    }
+
+    fn get_trees_from_above(&self, pos: (usize, usize)) -> Vec<&u32> {
+        self.trees[0..pos.0].iter().map(|e| &e[pos.1]).collect::<Vec<&u32>>()
+    }
+
+    fn get_trees_from_below(&self, pos: (usize, usize)) -> Vec<&u32> {
+        self.trees[pos.0 + 1..self.trees.len()].iter().map(|e| &e[pos.1]).collect::<Vec<&u32>>()
+    }
 }
+
 
 impl From<&str> for Forest {
     fn from(input: &str) -> Self {
@@ -74,6 +149,7 @@ fn main() {
     let forest = Forest::from(input.trim());
 
     println!("Part one: The total number of visible trees in the forest is: {}", forest.get_number_of_visible_trees());
+    println!("Part two: The highest scenic score is: {}", forest.get_best_position_to_place_the_camp());
 }
 
 #[cfg(test)]
@@ -107,6 +183,14 @@ mod tests {
         let forest = Forest::from(input());
 
         assert_eq!(forest.get_number_of_visible_trees(), 21);
+    }
+
+    #[test]
+    fn visibility_from_a_tree_can_be_obtained() {
+        let forest = Forest::from(input());
+
+        assert_eq!(forest.get_visibility_from_tree((1, 2)), 4);
+        assert_eq!(forest.get_visibility_from_tree((3, 2)), 8);
     }
 
     fn input() -> &'static str {
