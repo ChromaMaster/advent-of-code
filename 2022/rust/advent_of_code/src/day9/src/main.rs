@@ -1,7 +1,8 @@
-// #![deny(unused)]
+#![deny(unused)]
 
 use std::collections::HashSet;
 use std::fs;
+use std::hash::Hash;
 
 #[derive(PartialEq, Debug)]
 enum Move {
@@ -28,7 +29,7 @@ impl From<&str> for Move {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 struct Position {
     x: i32,
     y: i32,
@@ -62,71 +63,105 @@ impl Position {
     }
 }
 
-struct Bridge {
-    head: Position,
-    last_head_position: Position,
-    tail: Position,
-    tail_visited_positions: HashSet<Position>,
+struct Knot {
+    pos: Position,
+    last_position: Position,
+    visited_positions: HashSet<Position>,
 }
 
-impl Bridge {
+impl Knot {
     pub fn new() -> Self {
         Self {
-            head: Position::new(),
-            last_head_position: Position::new(),
-            tail: Position::new(),
-            tail_visited_positions: HashSet::from([Position::new()]),
+            pos: Position::new(),
+            last_position: Position::new(),
+            visited_positions: HashSet::from([Position::new()]),
         }
     }
+}
 
-    pub fn follow_knots(&mut self, mv: Move) {
+struct Rope {
+    knots: Vec<Knot>,
+}
+
+impl Rope {
+    pub fn new(knots: usize) -> Self {
+        let mut rope = Rope {
+            knots: Vec::with_capacity(knots),
+        };
+
+        for _ in 0..knots {
+            rope.knots.push(Knot::new())
+        }
+
+        rope
+    }
+
+    pub fn move_rope(&mut self, mv: Move) {
         match mv {
             Move::Up(y) => {
                 for _ in 0..y {
-                    self.move_head(Move::Up(1));
-                    self.move_tail(Move::Up(1));
+                    for i in 0..self.knots.len() {
+                        self.move_knot(i, Move::Up(1));
+                    }
                 }
             }
             Move::Right(x) => {
                 for _ in 0..x {
-                    self.move_head(Move::Right(1));
-                    self.move_tail(Move::Right(1));
+                    for i in 0..self.knots.len() {
+                        self.move_knot(i, Move::Right(1));
+                    }
                 }
             }
             Move::Down(y) => {
                 for _ in 0..y {
-                    self.move_head(Move::Down(1));
-                    self.move_tail(Move::Down(1));
+                    for i in 0..self.knots.len() {
+                        self.move_knot(i, Move::Down(1));
+                    }
                 }
             }
             Move::Left(x) => {
                 for _ in 0..x {
-                    self.move_head(Move::Left(1));
-                    self.move_tail(Move::Left(1));
+                    for i in 0..self.knots.len() {
+                        self.move_knot(i, Move::Left(1));
+                    }
                 }
             }
             _ => {}
         }
     }
 
-    fn move_head(&mut self, mv: Move) {
-        self.last_head_position = Position { ..self.head };
-        self.head.update(mv);
-    }
-
-    fn move_tail(&mut self, mv: Move) {
-        if self.tail.distance_to(&self.head) <= 1 {
+    fn move_knot(&mut self, pos: usize, mv: Move) {
+        // Head
+        if pos == 0 {
+            let knot = self.knots.get_mut(pos).unwrap();
+            knot.last_position = Position { ..knot.pos };
+            knot.pos.update(mv);
             return;
         }
 
-        // If the head was diagonal relative to the tail, take it's latest position
-        if self.tail.is_diagonal_to(&self.last_head_position) {
-            self.tail = Position { ..self.last_head_position };
-        } else {
-            self.tail.update(mv);
+        let mut knots = self.knots.iter_mut();
+        let previous_knot = knots.nth(pos - 1).unwrap();
+        let knot = knots.next().unwrap();
+
+        // let previous_knot = self.knots.get(pos - 1).clone().unwrap();
+        if knot.pos.distance_to(&previous_knot.pos) <= 1 {
+            return;
         }
 
-        self.tail_visited_positions.insert(Position { ..self.tail });
+        knot.last_position = Position { ..knot.pos };
+
+        // If the head was diagonal relative to the tail, take it's latest position
+        if knot.pos.is_diagonal_to(&previous_knot.last_position) {
+            knot.pos = Position { ..previous_knot.last_position };
+        } else {
+            knot.pos.update(mv);
+        }
+
+        knot.visited_positions.insert(Position { ..knot.pos });
+    }
+
+    pub fn get_tail(&self) -> &Knot {
+        self.knots.last().unwrap()
     }
 }
 
@@ -134,15 +169,16 @@ fn main() {
     let input = fs::read_to_string("src/day9/input/input.txt")
         .expect("Cannot open input file");
 
-    let mut bridge = Bridge::new();
-
     let lines = input.trim().split('\n').collect::<Vec<&str>>();
 
+    // Part one
+
+    let mut rope = Rope::new(2);
     for line in lines {
-        bridge.follow_knots(Move::from(line));
+        rope.move_rope(Move::from(line));
     }
 
-    println!("Part one: The rope tail visited {} positions", bridge.tail_visited_positions.len());
+    println!("Part one: The rope tail visited {} positions", rope.get_tail().visited_positions.len());
 }
 
 #[cfg(test)]
@@ -200,56 +236,55 @@ mod tests {
 
     #[test]
     fn tail_is_moved_when_head_is_moved_and_the_distance_remains_one() {
-        let mut bridge = Bridge::new();
+        let mut rope = Rope::new(2);
         // H (H over T over s)
 
-        bridge.follow_knots(Move::Right(4));
+        rope.move_rope(Move::Right(4));
         // s . . T H
 
-        assert_eq!(bridge.head, Position { x: 4, y: 0 });
-        // assert_eq!(bridge.tail, Position { x: 3, y: 0 });
+        assert_eq!(rope.get_head().pos, Position { x: 4, y: 0 });
+        assert_eq!(rope.get_tail().pos, Position { x: 3, y: 0 });
 
+        rope.move_rope(Move::Up(1));
+        // . . . . H
+        // s . . T .
 
-        // bridge.follow_knots(Move::Up(1));
-        // // . . . . H
-        // // s . . T .
+        assert_eq!(rope.get_head().pos, Position { x: 4, y: 1 });
+        assert_eq!(rope.get_tail().pos, Position { x: 3, y: 0 });
 
-        // assert_eq!(bridge.head, Position { x: 4, y: 1 });
-        assert_eq!(bridge.tail, Position { x: 3, y: 0 });
-        //
-        // bridge.follow_knots(Move::Right(1));
-        // // . . . . T H
-        // // s . . . . .
+        rope.move_rope(Move::Right(1));
+        // . . . . T H
+        // s . . . . .
 
-        assert_eq!(bridge.head, Position { x: 5, y: 1 });
-        // assert_eq!(bridge.tail, Position { x: 4, y: 1 });
-        //
-        // bridge.follow_knots(Move::Left(1));
+        assert_eq!(rope.get_head().pos, Position { x: 5, y: 1 });
+        assert_eq!(rope.get_tail().pos, Position { x: 4, y: 1 });
+
+        rope.move_rope(Move::Left(1));
         // . . . . H . (H over T)
         // s . . . . .
 
-        assert_eq!(bridge.head, Position { x: 4, y: 1 });
-        assert_eq!(bridge.tail, Position { x: 4, y: 1 });
+        assert_eq!(rope.get_head().pos, Position { x: 4, y: 1 });
+        assert_eq!(rope.get_tail().pos, Position { x: 4, y: 1 });
 
-        bridge.follow_knots(Move::Left(4));
+        rope.move_rope(Move::Left(4));
         // . . . . H . (H over T)
         // s . . . . .
 
-        assert_eq!(bridge.head, Position { x: 0, y: 1 });
-        assert_eq!(bridge.tail, Position { x: 1, y: 1 });
+        assert_eq!(rope.get_head().pos, Position { x: 0, y: 1 });
+        assert_eq!(rope.get_tail().pos, Position { x: 1, y: 1 });
     }
 
     #[test]
     fn tail_visited_positions_can_be_obtained() {
-        let mut bridge = Bridge::new();
-        bridge.follow_knots(Move::from("R 4"));
-        bridge.follow_knots(Move::from("U 4"));
-        bridge.follow_knots(Move::from("L 3"));
-        bridge.follow_knots(Move::from("D 1"));
-        bridge.follow_knots(Move::from("R 4"));
-        bridge.follow_knots(Move::from("D 1"));
-        bridge.follow_knots(Move::from("L 5"));
-        bridge.follow_knots(Move::from("R 2"));
+        let mut rope = Rope::new(2);
+        rope.move_rope(Move::from("R 4"));
+        rope.move_rope(Move::from("U 4"));
+        rope.move_rope(Move::from("L 3"));
+        rope.move_rope(Move::from("D 1"));
+        rope.move_rope(Move::from("R 4"));
+        rope.move_rope(Move::from("D 1"));
+        rope.move_rope(Move::from("L 5"));
+        rope.move_rope(Move::from("R 2"));
         /*
         . . . . . .
         . . . . . .
@@ -264,6 +299,6 @@ mod tests {
         s # # # . .
         */
 
-        assert_eq!(bridge.tail_visited_positions.len(), 13);
+        assert_eq!(rope.get_tail().visited_positions.len(), 13);
     }
 }
