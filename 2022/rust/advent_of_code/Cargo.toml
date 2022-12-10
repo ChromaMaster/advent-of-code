@@ -7,9 +7,10 @@ members = [
     "src/day5",
     "src/day6",
     "src/day7",
-    "src/day8"
+    "src/day8",
+    "src/day9"
 ]
-default-members = ["src/day8"]
+default-members = ["src/day9"]
 
 [workspace.package]
 version = "0.1.0"
