@@ -143,7 +143,6 @@ impl Rope {
         let previous_knot = knots.nth(pos - 1).unwrap();
         let knot = knots.next().unwrap();
 
-        // let previous_knot = self.knots.get(pos - 1).clone().unwrap();
         if knot.pos.distance_to(&previous_knot.pos) <= 1 {
             return;
         }
@@ -172,13 +171,20 @@ fn main() {
     let lines = input.trim().split('\n').collect::<Vec<&str>>();
 
     // Part one
-
     let mut rope = Rope::new(2);
-    for line in lines {
+    for &line in lines.iter() {
         rope.move_rope(Move::from(line));
     }
 
     println!("Part one: The rope tail visited {} positions", rope.get_tail().visited_positions.len());
+
+    // Part two
+    let mut rope = Rope::new(10);
+    for &line in lines.iter() {
+        rope.move_rope(Move::from(line));
+    }
+
+    println!("Part two: The rope tail visited {} positions", rope.get_tail().visited_positions.len());
 }
 
 #[cfg(test)]
