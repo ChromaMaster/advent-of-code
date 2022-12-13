@@ -6,7 +6,7 @@ use std::fs;
 use regex::Regex;
 use crate::Operation::Unknown;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 enum Operation {
     Mul(i64),
     Sum(i64),
@@ -14,6 +14,7 @@ enum Operation {
     Unknown(String),
 }
 
+#[derive(Clone)]
 struct Monkey {
     name: String,
     items: VecDeque<i64>,
@@ -98,6 +99,58 @@ impl Display for Monkey {
     }
 }
 
+struct KeepAwayGame {
+    monkeys: Vec<Monkey>,
+
+    total_rounds: u32,
+    current_round: u32,
+
+    stress_divider: i64,
+}
+
+impl KeepAwayGame {
+    pub fn new(monkeys: Vec<Monkey>, total_rounds: u32, stress_divider: i64) -> Self {
+        Self { monkeys, total_rounds, stress_divider, current_round: 0 }
+    }
+
+    pub fn process_round(&mut self) -> Result<(), ()> {
+        if self.current_round >= self.total_rounds {
+            return Err(());
+        }
+
+        for m in 0..self.monkeys.len() {
+            while self.process_monkey(m).is_ok() {};
+        }
+
+        self.current_round += 1;
+        Ok(())
+    }
+
+    pub fn process_monkey(&mut self, m: usize) -> Result<(), ()> {
+        let current_monkey = self.monkeys.get_mut(m).unwrap();
+        let item = current_monkey.get_item();
+        if item.is_none() {
+            return Err(());
+        }
+
+        let mut item_value = item.unwrap() / self.stress_divider;
+        let next = current_monkey.get_next_monkey(item_value);
+        self.monkeys.get_mut(next as usize).unwrap().add_item(item_value);
+
+        Ok(())
+    }
+
+    pub fn get_monkeys_total_business(&self) -> u32 {
+        let mut items_count = self.monkeys
+            .iter()
+            .map(|m| (m.name.to_string(), m.items_count))
+            .collect::<Vec<(String, u32)>>();
+        items_count.sort_by(|a, b| b.1.cmp(&a.1));
+
+        items_count[0].1 * items_count[1].1
+    }
+}
+
 fn main() {
     let input = fs::read_to_string("src/day11/input/input.txt")
         .expect("Cannot open input file");
@@ -110,48 +163,17 @@ fn main() {
         monkeys.push(Monkey::from(m));
     }
 
-    // FIXME: Something is happening with the mokeys vector. It's not being passed by reference
-    //  and the monkeys are not being updated. I don't know why. Because of that it's overflowing
-
-    for _ in 0..20 {
-        for i in 0..monkeys.len() {
-            while process_monkey(&mut monkeys, i, true).is_ok() {}
-        }
-    }
-
-    let mut items_count = monkeys.iter().map(|m| (m.name.to_string(), m.items_count)).collect::<Vec<(String, u32)>>();
-    items_count.sort_by(|a, b| b.1.cmp(&a.1));
-
-    println!("Part one: The level of business after 20 rounds is {}", items_count[0].1 * items_count[1].1);
+    // Part one
+    let mut game = KeepAwayGame::new(monkeys.clone(), 20, 3);
+    while game.process_round().is_ok() {};
+    println!("Part one: The level of business after 20 rounds is {}", game.get_monkeys_total_business());
 
     // Part two
-    for _ in 0..1000 {
-        for i in 0..monkeys.len() {
-            while process_monkey(&mut monkeys, i, false).is_ok() {}
-        }
-    }
-
-    let mut items_count = monkeys.iter().map(|m| (m.name.to_string(), m.items_count)).collect::<Vec<(String, u32)>>();
-    items_count.sort_by(|a, b| b.1.cmp(&a.1));
-
-    println!("Part one: The level of business after 1000 rounds is {}", items_count[0].1 * items_count[1].1);
-}
-
-fn process_monkey(monkeys: &mut [Monkey], m: usize, stress_is_relieved: bool) -> Result<(), ()> {
-    let monkey = monkeys.get_mut(m).unwrap();
-    let item = monkey.get_item();
-    if item.is_none() {
-        return Err(());
-    }
-
-    let item_value = if stress_is_relieved { relief_stress(item.unwrap()) } else { item.unwrap() };
-    let next = monkey.get_next_monkey(item_value);
-    monkeys.get_mut(next as usize).unwrap().add_item(item_value);
-    Ok(())
-}
-
-fn relief_stress(item: i64) -> i64 {
-    item / 3
+    // FIXME: This overflows as the worry level is not taken into account. There are some solutions out there using
+    //  the modulo to reduce the item worry level, but I'm not sure how to implement it.
+    let mut game = KeepAwayGame::new(monkeys.clone(), 1000, 1);
+    while game.process_round().is_ok() {};
+    println!("Part two: The level of business after 1000 rounds is {}", game.get_monkeys_total_business());
 }
 
 #[cfg(test)]
@@ -182,10 +204,10 @@ mod tests {
     }
 
     #[test]
-    fn target_moneky_can_be_obtained() {
+    fn target_moneky_can_be_obtained_after_relieving_stress() {
         let mut monkey = Monkey::from(monkey0());
         let item = monkey.get_item().unwrap();
-        assert_eq!(monkey.get_next_monkey(relief_stress(item)), 3);
+        assert_eq!(monkey.get_next_monkey(item / 3), 3);
     }
 
     fn monkey0() -> &'static str {
