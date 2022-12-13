@@ -84,7 +84,7 @@ impl Monkey {
         };
 
         self.items_count += 1;
-        Some(item / 3)
+        Some(item)
     }
 
     pub fn get_next_monkey(&self, item: i64) -> u32 {
@@ -110,28 +110,48 @@ fn main() {
         monkeys.push(Monkey::from(m));
     }
 
+    // FIXME: Something is happening with the mokeys vector. It's not being passed by reference
+    //  and the monkeys are not being updated. I don't know why. Because of that it's overflowing
+
     for _ in 0..20 {
         for i in 0..monkeys.len() {
-            while process_monkey(&mut monkeys, i).is_ok() {}
+            while process_monkey(&mut monkeys, i, true).is_ok() {}
         }
     }
 
     let mut items_count = monkeys.iter().map(|m| (m.name.to_string(), m.items_count)).collect::<Vec<(String, u32)>>();
     items_count.sort_by(|a, b| b.1.cmp(&a.1));
 
-    println!("Part one: The level of business after 20 rounts is {}", items_count[0].1 * items_count[1].1);
+    println!("Part one: The level of business after 20 rounds is {}", items_count[0].1 * items_count[1].1);
+
+    // Part two
+    for _ in 0..1000 {
+        for i in 0..monkeys.len() {
+            while process_monkey(&mut monkeys, i, false).is_ok() {}
+        }
+    }
+
+    let mut items_count = monkeys.iter().map(|m| (m.name.to_string(), m.items_count)).collect::<Vec<(String, u32)>>();
+    items_count.sort_by(|a, b| b.1.cmp(&a.1));
+
+    println!("Part one: The level of business after 1000 rounds is {}", items_count[0].1 * items_count[1].1);
 }
 
-fn process_monkey(monkeys: &mut [Monkey], m: usize) -> Result<(), ()> {
+fn process_monkey(monkeys: &mut [Monkey], m: usize, stress_is_relieved: bool) -> Result<(), ()> {
     let monkey = monkeys.get_mut(m).unwrap();
     let item = monkey.get_item();
     if item.is_none() {
         return Err(());
     }
 
-    let next = monkey.get_next_monkey(item.unwrap());
-    monkeys.get_mut(next as usize).unwrap().add_item(item.unwrap());
+    let item_value = if stress_is_relieved { relief_stress(item.unwrap()) } else { item.unwrap() };
+    let next = monkey.get_next_monkey(item_value);
+    monkeys.get_mut(next as usize).unwrap().add_item(item_value);
     Ok(())
+}
+
+fn relief_stress(item: i64) -> i64 {
+    item / 3
 }
 
 #[cfg(test)]
@@ -158,14 +178,14 @@ mod tests {
     #[test]
     fn an_item_can_be_obtained_from_a_monkey() {
         let mut monkey = Monkey::from(monkey0());
-        assert_eq!(monkey.get_item().unwrap(), (79 * 19) / 3);
+        assert_eq!(monkey.get_item().unwrap(), (79 * 19));
     }
 
     #[test]
     fn target_moneky_can_be_obtained() {
         let mut monkey = Monkey::from(monkey0());
         let item = monkey.get_item().unwrap();
-        assert_eq!(monkey.get_next_monkey(item), 3);
+        assert_eq!(monkey.get_next_monkey(relief_stress(item)), 3);
     }
 
     fn monkey0() -> &'static str {
