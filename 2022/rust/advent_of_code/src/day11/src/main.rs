@@ -1,4 +1,4 @@
-// #![deny(unused)]
+#![deny(unused)]
 
 use std::collections::VecDeque;
 use std::fmt::{Display, Formatter};
@@ -8,18 +8,18 @@ use crate::Operation::Unknown;
 
 #[derive(PartialEq, Debug, Clone)]
 enum Operation {
-    Mul(i64),
-    Sum(i64),
-    Sq,
+    Mul(u64),
+    Sum(u64),
+    Square,
     Unknown(String),
 }
 
 #[derive(Clone)]
 struct Monkey {
     name: String,
-    items: VecDeque<i64>,
+    items: VecDeque<u64>,
     op: Operation,
-    test: i64,
+    test: u64,
     next_monkey: Vec<u32>,
 
     items_count: u32,
@@ -39,8 +39,8 @@ impl From<&str> for Monkey {
         let mut m = Monkey {
             name: format!("Monkey {}", &caps[1]),
             items: VecDeque::new(),
-            op: Operation::Sq,
-            test: caps[6].parse::<i64>().unwrap(),
+            op: Operation::Square,
+            test: caps[6].parse::<u64>().unwrap(),
             next_monkey: vec![caps[8].parse::<u32>().unwrap(), caps[7].parse::<u32>().unwrap()],
             items_count: 0,
         };
@@ -48,19 +48,19 @@ impl From<&str> for Monkey {
 
         // Get starting items
         for item in caps[2].replace(',', "").split(' ') {
-            m.items.push_back(item.parse::<i64>().unwrap());
+            m.items.push_back(item.parse::<u64>().unwrap());
         }
 
         m.op = match &caps[4] {
             "*" => {
                 if &caps[5] == "old" {
-                    Operation::Sq
+                    Operation::Square
                 } else {
-                    Operation::Mul(caps[5].parse::<i64>().unwrap())
+                    Operation::Mul(caps[5].parse::<u64>().unwrap())
                 }
             }
             "+" => {
-                Operation::Sum(caps[5].parse::<i64>().unwrap())
+                Operation::Sum(caps[5].parse::<u64>().unwrap())
             }
             _ => { Unknown(String::from(&caps[4])) }
         };
@@ -70,17 +70,17 @@ impl From<&str> for Monkey {
 }
 
 impl Monkey {
-    pub fn add_item(&mut self, item: i64) {
+    pub fn add_item(&mut self, item: u64) {
         self.items.push_back(item);
     }
 
-    pub fn get_item(&mut self) -> Option<i64> {
+    pub fn get_item(&mut self) -> Option<u64> {
         let mut item = self.items.pop_front()?;
 
         item = match self.op {
             Operation::Sum(v) => item + v,
             Operation::Mul(v) => item * v,
-            Operation::Sq => item.pow(2),
+            Operation::Square => item.pow(2),
             _ => 1
         };
 
@@ -88,7 +88,7 @@ impl Monkey {
         Some(item)
     }
 
-    pub fn get_next_monkey(&self, item: i64) -> u32 {
+    pub fn get_next_monkey(&self, item: u64) -> u32 {
         self.next_monkey[(item % self.test == 0) as usize]
     }
 }
@@ -105,12 +105,18 @@ struct KeepAwayGame {
     total_rounds: u32,
     current_round: u32,
 
-    stress_divider: i64,
+    stress_divider: u64,
+    modulus: u64,
 }
 
 impl KeepAwayGame {
-    pub fn new(monkeys: Vec<Monkey>, total_rounds: u32, stress_divider: i64) -> Self {
-        Self { monkeys, total_rounds, stress_divider, current_round: 0 }
+    pub fn new(monkeys: Vec<Monkey>, total_rounds: u32, stress_divider: u64) -> Self {
+        let mut game = Self { monkeys, total_rounds, stress_divider, current_round: 0, modulus: 0 };
+
+        // Used for the [Chinese Remainder Theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem)
+        game.modulus = game.monkeys.iter().map(|m| m.test).product();
+
+        game
     }
 
     pub fn process_round(&mut self) -> Result<(), ()> {
@@ -133,7 +139,8 @@ impl KeepAwayGame {
             return Err(());
         }
 
-        let mut item_value = item.unwrap() / self.stress_divider;
+        let item_value = (item.unwrap() % self.modulus) / self.stress_divider;
+
         let next = current_monkey.get_next_monkey(item_value);
         self.monkeys.get_mut(next as usize).unwrap().add_item(item_value);
 
@@ -163,15 +170,16 @@ fn main() {
         monkeys.push(Monkey::from(m));
     }
 
+    // FIXME: After introducing the modulus, the item count is off by very little. Not sure why but
+    //  (item % modulus / stress_divider) % test == (item / stress_divider) % test
+
     // Part one
     let mut game = KeepAwayGame::new(monkeys.clone(), 20, 3);
     while game.process_round().is_ok() {};
     println!("Part one: The level of business after 20 rounds is {}", game.get_monkeys_total_business());
 
     // Part two
-    // FIXME: This overflows as the worry level is not taken into account. There are some solutions out there using
-    //  the modulo to reduce the item worry level, but I'm not sure how to implement it.
-    let mut game = KeepAwayGame::new(monkeys.clone(), 1000, 1);
+    let mut game = KeepAwayGame::new(monkeys, 1000, 1);
     while game.process_round().is_ok() {};
     println!("Part two: The level of business after 1000 rounds is {}", game.get_monkeys_total_business());
 }
