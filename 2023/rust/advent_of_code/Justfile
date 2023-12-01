@@ -1,0 +1,10 @@
+# default recipe to display help information
+default:
+  @just --list
+
+run +DAY:
+	echo "Running {{ DAY }} challenge..."
+	cargo run --bin {{DAY}}
+
+test:
+	cargo test
