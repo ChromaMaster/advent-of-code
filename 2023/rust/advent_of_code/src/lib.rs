@@ -1,10 +1,7 @@
 pub mod day01;
+pub mod day02;
 
 use std::fs;
-
-trait Day {
-    fn run(&self) -> String;
-}
 
 pub fn read_input_file(path: &str) -> Vec<String> {
     let full_path = format!("input/{}", path);

@@ -11,11 +11,3 @@ fn main() {
     println!("Result part two: {}", result);
     advent_of_code::write_output_file("output01b.txt", &result);
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn is_true() {
-        assert!(true)
-    }
-}
