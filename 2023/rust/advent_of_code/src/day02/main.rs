@@ -8,7 +8,11 @@ fn main() {
         blue: 14,
     };
 
-    let result = day02::run(&input, &game_rules);
+    let result = day02::run_a(&input, &game_rules);
     println!("Result part one: {}", result);
     advent_of_code::write_output_file("output02a.txt", &result);
+
+    let result = day02::run_b(&input);
+    println!("Result part two: {}", result);
+    advent_of_code::write_output_file("output02b.txt", &result);
 }
