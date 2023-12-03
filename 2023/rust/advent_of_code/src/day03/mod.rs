@@ -1,16 +1,7 @@
 pub fn run_a(input: &Vec<String>) -> String {
     let mut result = 0;
 
-    let mut parts: Vec<Part> = Vec::new();
-    let mut symbols: Vec<Symbol> = Vec::new();
-
-    for (i, line) in input.iter().enumerate() {
-        let parts_in_line = extract_parts_from_row(i, line);
-        parts.extend(parts_in_line);
-
-        let symbols_in_line = extract_symbols_from_row(i, line);
-        symbols.extend(symbols_in_line);
-    }
+    let (parts, symbols) = get_parts_and_symbols(input);
 
     for part in parts.iter() {
         for symbol in symbols.iter() {
@@ -24,9 +15,48 @@ pub fn run_a(input: &Vec<String>) -> String {
 }
 
 pub fn run_b(input: &Vec<String>) -> String {
-    let result = 0;
+    let mut result = 0;
+
+    let (parts, symbols) = get_parts_and_symbols(input);
+
+    for symbol in symbols.iter() {
+        if !symbol.is_gear() {
+            continue;
+        }
+
+        let mut number_of_adjacent_parts = 0;
+        let mut gear_ratio = 1;
+
+        for part in parts.iter() {
+            if part.is_adjacent_to_symbol(symbol) {
+                number_of_adjacent_parts += 1;
+                gear_ratio *= part.value;
+            }
+        }
+
+        if number_of_adjacent_parts != 2 {
+            continue;
+        }
+
+        result += gear_ratio;
+    }
 
     result.to_string()
+}
+
+fn get_parts_and_symbols(input: &Vec<String>) -> (Vec<Part>, Vec<Symbol>) {
+    let mut parts: Vec<Part> = Vec::new();
+    let mut symbols: Vec<Symbol> = Vec::new();
+
+    for (i, line) in input.iter().enumerate() {
+        let parts_in_line = extract_parts_from_row(i, line);
+        parts.extend(parts_in_line);
+
+        let symbols_in_line = extract_symbols_from_row(i, line);
+        symbols.extend(symbols_in_line);
+    }
+
+    (parts, symbols)
 }
 
 #[derive(Debug, Default, Eq, PartialEq, Copy, Clone)]
@@ -77,6 +107,10 @@ impl Symbol {
             value: ' ',
             position: Point::default(),
         }
+    }
+
+    fn is_gear(&self) -> bool {
+        self.value == '*'
     }
 }
 
@@ -201,6 +235,16 @@ mod tests {
     }
 
     #[test]
+    fn given_a_symbol_it_knows_if_its_a_gear() {
+        let symbol = Symbol {
+            value: '*',
+            position: Point::default(),
+        };
+
+        assert!(symbol.is_gear());
+    }
+
+    #[test]
     fn given_two_points_it_returns_the_x_distance_between_them() {
         let point_a = Point::new(1, 1);
         let point_b = Point::new(4, 5);
@@ -268,5 +312,13 @@ mod tests {
 
         let expected = 4361;
         assert_eq!(run_a(&input), expected.to_string());
+    }
+
+    #[test]
+    fn given_a_schematic_it_returns_the_sum_of_all_gear_ratios() {
+        let input = read_input_file("example03a.txt");
+
+        let expected = 467835;
+        assert_eq!(run_b(&input), expected.to_string());
     }
 }
