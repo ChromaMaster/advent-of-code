@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub fn run_a(input: &Vec<String>) -> String {
     let mut result = 0;
 
@@ -11,7 +13,27 @@ pub fn run_a(input: &Vec<String>) -> String {
 }
 
 pub fn run_b(input: &Vec<String>) -> String {
-    let result = 0;
+    let mut result = 0;
+
+
+    let mut number_of_copies: HashMap<u32, u32> = HashMap::new();
+
+    for line in input.iter() {
+        let card_number = line.split(':').next().unwrap().trim().split(' ').last().unwrap().parse::<u32>().unwrap();
+        let card_values = line.split(':').last().unwrap().trim();
+        let scratchcard = Scratchcard::from(card_values);
+        let winning_numbers = scratchcard.number_of_matches();
+
+        // Get current card copies
+        let card_copies = *number_of_copies.get(&card_number).unwrap_or(&1);
+        result += card_copies;
+
+        // Add new copies
+        for cn in card_number + 1..=(card_number + winning_numbers) {
+            let new_copies = number_of_copies.get(&cn).unwrap_or(&1) + card_copies;
+            number_of_copies.insert(cn, new_copies);
+        }
+    }
 
     result.to_string()
 }
@@ -36,6 +58,18 @@ impl From<&str> for Scratchcard {
 }
 
 impl Scratchcard {
+    fn number_of_matches(&self) -> u32 {
+        let mut matches = 0;
+
+        for number in &self.scratched_numbers {
+            if self.winning_numbers.contains(number) {
+                matches += 1;
+            }
+        }
+
+        matches
+    }
+
     fn value(&self) -> u32 {
         let mut value = 0;
 
@@ -81,6 +115,13 @@ mod tests {
     }
 
     #[test]
+    fn given_a_scratchcard_is_possible_to_get_its_number_of_matches() {
+        let scratchcard = Scratchcard::from("41 48 83 86 17 | 83 86  6 31 17  9 48 53");
+
+        assert_eq!(scratchcard.number_of_matches(), 4);
+    }
+
+    #[test]
     fn given_a_scratchcard_is_possible_to_get_its_value() {
         let scratchcard = Scratchcard::from("41 48 83 86 17 | 83 86  6 31 17  9 48 53");
 
@@ -92,5 +133,12 @@ mod tests {
         let input = read_input_file("example04a.txt");
 
         assert_eq!(run_a(&input), "13");
+    }
+
+    #[test]
+    fn given_a_pile_of_cards_and_the_new_instructions_is_possible_to_get_the_total_value() {
+        let input = read_input_file("example04a.txt");
+
+        assert_eq!(run_b(&input), "30");
     }
 }
