@@ -1,0 +1,17 @@
+[project]
+name = "advent-of-code"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ChromaMaster", email = "vladtel.dev@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+advent-of-code = "advent_of_code:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
