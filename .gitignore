@@ -1,3 +1,6 @@
 **/rust/**/target/
 **/cpp/**/build/
 
+# Python
+__pycache__/
+
