@@ -6,8 +6,6 @@ DATA_PATH = f"{pathlib.Path(__file__).parent.resolve()}/input"
 
 
 def main() -> None:
-    print("Hello from advent-of-code!")
-
     input = []
     with open(f"{DATA_PATH}/input-day01.txt") as f:
         input = f.readlines()
