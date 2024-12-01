@@ -1,0 +1,19 @@
+default:
+	@just --list
+
+# Creates the virtual env and enters it
+venv:
+	uv venv
+	source ./.venv/bin/activate
+
+# Run the project
+run:
+	uv run advent-of-code
+
+# Run the tests
+test:
+	uv run pytest -v
+
+# Format the project
+format:
+	ruff format

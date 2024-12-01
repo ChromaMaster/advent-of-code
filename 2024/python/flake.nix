@@ -21,6 +21,7 @@
         python_packages = python.withPackages (
           ps: with ps; [
             pip
+            pytest
           ]
         );
       in
@@ -36,6 +37,7 @@
               python_packages
 
               uv
+              ruff
             ];
           };
 

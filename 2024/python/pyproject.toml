@@ -7,11 +7,18 @@ authors = [
     { name = "ChromaMaster", email = "vladtel.dev@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "ruff>=0.8.1",
+]
 
 [project.scripts]
-advent-of-code = "advent_of_code:main"
+advent-of-code = "advent_of_code.main:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3",
+]
