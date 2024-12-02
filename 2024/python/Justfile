@@ -16,4 +16,4 @@ test:
 
 # Format the project
 format:
-	ruff format
+	uv run ruff format
