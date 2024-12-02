@@ -20,6 +20,7 @@ def run_day02() -> None:
         input = f.readlines()
 
     print(f"Day two[part one] solution {day02.part_one(input)}")
+    print(f"Day two[part two] solution {day02.part_two(input)}")
 
 
 def main() -> None:
