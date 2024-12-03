@@ -1,1 +1,1 @@
-from .day03 import part_one
+from .day03 import part_one, part_two

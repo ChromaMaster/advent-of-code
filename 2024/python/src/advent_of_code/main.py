@@ -31,6 +31,7 @@ def run_day03() -> None:
     input = "".join(input)
 
     print(f"Day two[part one] solution: {day03.part_one(input)}")
+    print(f"Day two[part two] solution: {day03.part_two(input)}")
 
 
 def main() -> None:
