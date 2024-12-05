@@ -82,7 +82,41 @@ def get_word_occurrences(matrix: list[list[str]], word: str) -> int:
     return occurrences
 
 
+def get_x_max_occurrences(matrix) -> int:
+    cross = {}
+    word = "MAS"
+    for col in range(len(matrix)):
+        for row in range(len(matrix[col])):
+            key = f"{col+1},{row+1}"
+            cross[key] = cross.get(key, 0) + _get_word_occurrences(
+                matrix, word, "", Direction(col=1, row=1), col, row
+            )
+
+            key = f"{col-1},{row-1}"
+            cross[key] = cross.get(key, 0) + _get_word_occurrences(
+                matrix, word, "", Direction(col=-1, row=-1), col, row
+            )
+
+            key = f"{col+1},{row-1}"
+            cross[key] = cross.get(key, 0) + _get_word_occurrences(
+                matrix, word, "", Direction(col=1, row=-1), col, row
+            )
+
+            key = f"{col-1},{row+1}"
+            cross[key] = cross.get(key, 0) + _get_word_occurrences(
+                matrix, word, "", Direction(col=-1, row=1), col, row
+            )
+
+    return len([key for key, value in cross.items() if value == 2])
+
+
 def part_one(input: list[str]) -> int:
     matrix = get_matrix(input)
 
     return get_word_occurrences(matrix, "XMAS")
+
+
+def part_two(input: list[str]) -> int:
+    matrix = get_matrix(input)
+
+    return get_x_max_occurrences(matrix)

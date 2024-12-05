@@ -1,7 +1,11 @@
-from advent_of_code.day04.day04 import get_matrix, get_word_occurrences
-from advent_of_code.day04 import part_one
+from advent_of_code.day04.day04 import (
+    get_matrix,
+    get_word_occurrences,
+    get_x_max_occurrences,
+)
+from advent_of_code.day04 import part_one, part_two
 
-problem_input = [
+problem_input_part_one = [
     "MMMSXXMASM",
     "MSAMXMSMSA",
     "AMXSXMAAMM",
@@ -12,6 +16,18 @@ problem_input = [
     "SAXAMASAAA",
     "MAMMMXMMMM",
     "MXMXAXMASX",
+]
+problem_input_part_two = [
+    ".M.S......",
+    "..A..MSMS.",
+    ".M.S.MAA..",
+    "..A.ASMSM.",
+    ".M.S.M....",
+    "..........",
+    "S.S.S.S.S.",
+    ".A.A.A.A..",
+    "M.M.M.M.M.",
+    "..........",
 ]
 
 
@@ -111,8 +127,37 @@ class TestDay04PartOne:
         assert occurrences == expected_occurrences
 
     def test_it_can_solve_the_given_problem(self) -> None:
-        result = part_one(problem_input)
+        result = part_one(problem_input_part_one)
 
         expected_result = 18
+
+        assert result == expected_result
+
+
+class TestDay04PartTwo:
+    def test_it_is_able_to_find_all_x_mas_ocurrences(self) -> None:
+        matrix = [
+            [".", "M", ".", "S", ".", ".", ".", ".", ".", "."],
+            [".", ".", "A", ".", ".", "M", "S", "M", "S", "."],
+            [".", "M", ".", "S", ".", "M", "A", "A", ".", "."],
+            [".", ".", "A", ".", "A", "S", "M", "S", "M", "."],
+            [".", "M", ".", "S", ".", "M", ".", ".", ".", "."],
+            [".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+            ["S", ".", "S", ".", "S", ".", "S", ".", "S", "."],
+            [".", "A", ".", "A", ".", "A", ".", "A", ".", "."],
+            ["M", ".", "M", ".", "M", ".", "M", ".", "M", "."],
+            [".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+        ]
+
+        ocurrences = get_x_max_occurrences(matrix)
+
+        expected_ocurrences = 9
+
+        assert ocurrences == expected_ocurrences
+
+    def test_it_can_solve_the_given_problem(self) -> None:
+        result = part_two(problem_input_part_two)
+
+        expected_result = 9
 
         assert result == expected_result
