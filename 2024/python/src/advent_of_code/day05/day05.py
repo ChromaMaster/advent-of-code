@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Self
 import math
+import copy
 
 
 @dataclass
@@ -31,6 +32,12 @@ class Update:
 
         return self.pages == other.pages
 
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        return str(self.pages)
+
     @property
     def middle_page(self) -> int:
         return self.pages[math.floor(len(self.pages) / 2)]
@@ -50,6 +57,30 @@ class Update:
                 return False
 
         return True
+
+    def corrected(self, rules: list[Rule]) -> Self:
+        u = copy.deepcopy(self)
+
+        while not u.evaluate_set(rules):
+            u._correct(rules)
+
+        return u
+
+    def _correct(self, rules: list[Rule]) -> None:
+        """Corrects the update in place"""
+        for rule in rules:
+            if rule.before not in self.pages or rule.after not in self.pages:
+                continue
+
+            before_index = self.pages.index(rule.before)
+            after_index = self.pages.index(rule.after)
+
+            if before_index > after_index:
+                # Swap the values
+                self.pages[before_index], self.pages[after_index] = (
+                    self.pages[after_index],
+                    self.pages[before_index],
+                )
 
 
 def get_rules(lines: list[str]) -> list[Rule]:
@@ -87,6 +118,29 @@ def get_correctly_ordered_updates(
     return correctly_ordered_updates
 
 
+def get_incorrectly_ordered_updates(
+    updates: list[Update], rules: list[Rule]
+) -> list[Update]:
+    incorrectly_ordered_updates = []
+
+    for update in updates:
+        if not update.evaluate_set(rules):
+            incorrectly_ordered_updates.append(update)
+
+    return incorrectly_ordered_updates
+
+
+def correct_updates(
+    incorrectly_ordered_updates: list[Update], rules: list[Rule]
+) -> list[Update]:
+    corrected_updates = []
+
+    for update in incorrectly_ordered_updates:
+        corrected_updates.append(update.corrected(rules))
+
+    return corrected_updates
+
+
 def sum_middle_pages(updates: list[Update]) -> int:
     sum = 0
 
@@ -102,3 +156,13 @@ def part_one(input: list[str]) -> int:
     correctly_ordered_updates = get_correctly_ordered_updates(updates, rules)
 
     return sum_middle_pages(correctly_ordered_updates)
+
+
+def part_two(input: list[str]) -> int:
+    rules, updates = get_rules_and_updates(input)
+
+    incorrectly_ordered_updates = get_incorrectly_ordered_updates(updates, rules)
+
+    corrected_updates = correct_updates(incorrectly_ordered_updates, rules)
+
+    return sum_middle_pages(corrected_updates)

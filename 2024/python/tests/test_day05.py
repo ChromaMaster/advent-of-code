@@ -6,9 +6,11 @@ from advent_of_code.day05.day05 import (
     get_rules_and_updates,
     get_correctly_ordered_updates,
     sum_middle_pages,
+    get_incorrectly_ordered_updates,
+    correct_updates,
 )
 
-from advent_of_code.day05 import part_one
+from advent_of_code.day05 import part_one, part_two
 
 problem_input = [
     "47|53",
@@ -213,5 +215,72 @@ class TestDay05PartOne:
         result = part_one(problem_input)
 
         expected_result = 143
+
+        assert result == expected_result
+
+
+class TestDay05PartTwo:
+    def test_it_can_identify_all_the_incorrectly_ordered_updates_based_on_some_rules(
+        self,
+    ) -> None:
+        rules, updates = get_rules_and_updates(problem_input)
+
+        incorrectly_ordered_updates = get_incorrectly_ordered_updates(updates, rules)
+
+        expected_incorrectly_ordered_updates = [
+            Update(pages=[75, 97, 47, 61, 53]),
+            Update(pages=[61, 13, 29]),
+            Update(pages=[97, 13, 75, 29, 47]),
+        ]
+
+        assert incorrectly_ordered_updates == expected_incorrectly_ordered_updates
+
+    def test_it_is_possible_to_fix_an_incorrectly_ordered_update_to_make_a_set_of_rules_pass(
+        self,
+    ) -> None:
+        incorrect_update = Update(pages=[1, 2, 3])
+        rules = [
+            Rule(before=2, after=1),
+            Rule(before=3, after=1),
+        ]
+
+        corrected_update = incorrect_update.corrected(rules)
+
+        expected_corrected_update = Update(pages=[2, 3, 1])
+
+        assert corrected_update == expected_corrected_update
+
+    def test_it_can_fix_a_set_of_updates_based_on_some_rules(
+        self,
+    ) -> None:
+        incorrectly_ordered_updates = [
+            Update(pages=[1, 2, 3]),
+            Update(pages=[10, 9, 11]),
+            Update(pages=[32, 33, 34]),
+        ]
+
+        rules = [
+            Rule(before=2, after=1),
+            Rule(before=3, after=1),
+            Rule(before=9, after=10),
+            Rule(before=33, after=32),
+            Rule(before=34, after=33),
+            Rule(before=34, after=32),
+        ]
+
+        corrected_updates = correct_updates(incorrectly_ordered_updates, rules)
+
+        expected_corrected_updates = [
+            Update(pages=[2, 3, 1]),
+            Update(pages=[9, 10, 11]),
+            Update(pages=[34, 33, 32]),
+        ]
+
+        assert corrected_updates == expected_corrected_updates
+
+    def test_it_can_solve_the_given_problem(self) -> None:
+        result = part_two(problem_input)
+
+        expected_result = 123
 
         assert result == expected_result
