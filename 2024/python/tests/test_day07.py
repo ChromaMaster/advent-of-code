@@ -1,5 +1,5 @@
 from advent_of_code.day07.day07 import Equation, OperationTrie
-from advent_of_code.day07 import part_one
+from advent_of_code.day07 import part_one, part_two
 
 problem_input = [
     "190: 10 19",
@@ -121,5 +121,51 @@ class TestDay07PartOne:
         result = part_one(problem_input)
 
         expected_result = 3749
+
+        assert result == expected_result
+
+
+class TestDay07PartTwo:
+    def test_it_can_create_an_operation_trie_with_the_concat_operator(self) -> None:
+        trie = OperationTrie(operands=[1, 2, 3], operators=["+", "||"])
+
+        expected_trie_repr = {
+            "value": 1,
+            "next": {
+                "+": {
+                    "value": 3,
+                    "next": {
+                        "+": {
+                            "value": 6,
+                            "next": None,
+                        },
+                        "||": {
+                            "value": 33,
+                            "next": None,
+                        },
+                    },
+                },
+                "||": {
+                    "value": 12,
+                    "next": {
+                        "+": {
+                            "value": 15,
+                            "next": None,
+                        },
+                        "||": {
+                            "value": 123,
+                            "next": None,
+                        },
+                    },
+                },
+            },
+        }
+
+        assert trie.as_dict() == expected_trie_repr
+
+    def test_it_can_solve_the_given_problem(self) -> None:
+        result = part_two(problem_input)
+
+        expected_result = 11387
 
         assert result == expected_result

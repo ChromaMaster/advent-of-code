@@ -60,6 +60,7 @@ def run_day07() -> None:
     input = get_day_input("day07")
 
     print(f"Day seven[part one] solution: {day07.part_one(input)}")
+    print(f"Day seven[part two] solution: {day07.part_two(input)}")
 
 
 def main() -> None:

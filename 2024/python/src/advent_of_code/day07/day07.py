@@ -26,6 +26,8 @@ class OperationTrieNode:
                 return acc + operand
             case "*":
                 return acc * operand
+            case "||":
+                return int(str(acc) + str(operand))
             case _:
                 return 0
 
@@ -169,5 +171,16 @@ def part_one(input: list[str]) -> int:
     return sum
 
 
-# def part_two(input: list[str]) -> int:
-#     pass
+def part_two(input: list[str]) -> int:
+    equations: list[Equation] = []
+    for line in input:
+        equations.append(Equation.from_str(line))
+
+    sum = 0
+    for equation in equations:
+        equation_trie = equation.get_operation_trie(["+", "*", "||"])
+
+        if equation_trie.contains_result(equation.result):
+            sum += equation.result
+
+    return sum
