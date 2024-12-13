@@ -1,6 +1,6 @@
 import pathlib
 
-from advent_of_code import day01, day02, day03, day04, day05, day06
+from advent_of_code import day01, day02, day03, day04, day05, day06, day07
 
 DATA_PATH = f"{pathlib.Path(__file__).parent.resolve()}/input"
 
@@ -56,6 +56,12 @@ def run_day06() -> None:
     print(f"Day six[part one] solution: {day06.part_one(input)}")
 
 
+def run_day07() -> None:
+    input = get_day_input("day07")
+
+    print(f"Day seven[part one] solution: {day07.part_one(input)}")
+
+
 def main() -> None:
     run_day01()
     run_day02()
@@ -63,3 +69,4 @@ def main() -> None:
     run_day04()
     run_day05()
     run_day06()
+    run_day07()
